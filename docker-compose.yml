@@ -1,0 +1,55 @@
+version: "3.3"
+
+services:
+  mysqldb:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root!@#321
+      MYSQL_DATABASE: walletDB
+    ports:
+      - 3307:3306
+
+  memchached:
+    container_name: memchached
+    image: memcached
+    restart: always
+    ports:
+      - 11211:11211
+
+  e-wallet-api:
+    container_name: e-wallet-api
+    image: do
+    build: .
+      # context: ./
+    # dockerfile: Dockerfile
+    environment:
+      SPRING_APPLICATION_JSON: '{       
+               "spring.datasource.url"  : "jdbc:mysql://mysqldb:3306/walletDB?useSSL=false&serverTimezone=UTC&useLegacyDatetimeCode=false",
+               "spring.datasource.username" : "root",
+               "spring.datasource.password" : "root!@#321",
+               "spring.jpa.hibernate.ddl-auto" : "update",
+               "spring.datasource.initialization-mode" : "always"
+             }'
+      APP_DB: deploy
+      MEMCACHED_SERVICE_HOST: memchached
+      SPRING_MAIL_USERNAME: talal1mohsen@gmail.com
+      SPRING_MAIL_PASSWORD: abicqefytvjwhbpp
+      PAYSTACK_SECRETKEY: sk_test_0eee2028ee0d9b5f3fe44b2fb46b96088cbf3af0 #Enter your Paystack secrete key here
+      APP_JWTSECRET: EWalletSecretKey #You can change this to anything you want
+    ports:
+      - "8083:8083"
+    links:
+      - memchached
+    depends_on:
+      - mysqldb
+    restart: on-failure
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8081:8080
+
+volumes:
+  db:
